@@ -22,7 +22,7 @@ func main()  {
 		strId := c.PostForm("userId")
 		message := c.PostForm("message")
 
-		userId, err := strconv.ParseInt(strId, 10, 64);
+		userId, err := strconv.ParseInt(strId, 10, 64)
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"result": 0,
