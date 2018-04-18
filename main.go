@@ -4,15 +4,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"github.com/olahol/melody"
-	"github.com/labstack/gommon/log"
 	"strconv"
+	log "github.com/Sirupsen/logrus"
+	"os"
 )
 
 func main()  {
 	r := gin.Default()
 	m := melody.New()
-	log.SetLevel(log.DEBUG)
 	user := make(map[int64]*melody.Session)
+
+	log.SetLevel(log.DebugLevel)
+	log.SetOutput(os.Stdout)
 
 	r.GET("/", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "index.html")
@@ -35,7 +38,11 @@ func main()  {
 
 		msg := "没有找到用户"
 		if s, ok := user[userId]; ok {
-			log.Debug("send userId:" + strconv.FormatInt(userId, 10) + " message:" + message)
+			log.WithFields(log.Fields{
+				"userId": userId,
+				"message": message,
+			}).Debug("send message to user")
+
 			m.BroadcastMultiple([]byte(message), []*melody.Session{s})
 			msg = "成功发送"
 		}
@@ -54,7 +61,9 @@ func main()  {
 	m.HandleConnect(func(s *melody.Session) {
 		userId := _getUserIdFromSession(s)
 		if 0 != userId {
-			log.Debug("add:" + strconv.FormatInt(userId, 10))
+			log.WithFields(log.Fields{
+				"userId": userId,
+			}).Debug("add user")
 			user[userId] = s
 		}
 	})
@@ -62,7 +71,9 @@ func main()  {
 	m.HandleClose(func(se *melody.Session, i int, s string) error {
 		userId := _getUserIdFromSession(se)
 		if 0 != userId {
-			log.Debug("remove:" + strconv.FormatInt(userId, 10))
+			log.WithFields(log.Fields{
+				"userId": userId,
+			}).Debug("remove user")
 			delete(user, userId)
 		}
 
